@@ -4,6 +4,7 @@ import 'package:english_words/english_words.dart';
 
 class RandomWordState extends State<RandomWordManager> {
   final _suggestions = <WordPair>[];
+  final _saved = new Set<WordPair>();
   final _biggerFonts = const TextStyle(fontSize: 18.0);
 
   @override
@@ -11,6 +12,9 @@ class RandomWordState extends State<RandomWordManager> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Startup Name Generator'),
+        actions: <Widget>[
+          new IconButton(icon: const Icon(Icons.list), onPressed: _pushSaved),
+        ],
       ),
       body: _buildSuggestions(),
     );
@@ -40,11 +44,48 @@ class RandomWordState extends State<RandomWordManager> {
   }
 
   Widget _buildRow(WordPair suggestion) {
+    final bool alreadySaved = _saved.contains(suggestion);
     return ListTile(
-      title: Text(
+      title: new Text(
         suggestion.asPascalCase,
         style: _biggerFonts,
       ),
+      trailing: new Icon(alreadySaved ? Icons.favorite : Icons.favorite_border,
+          color: alreadySaved ? Colors.red : null),
+      onTap: () {
+        setState(() {
+          if (alreadySaved) {
+            _saved.remove(suggestion);
+          } else {
+            _saved.add(suggestion);
+          }
+        });
+      },
+    );
+  }
+
+  void _pushSaved() {
+    Navigator.of(context).push(
+      new MaterialPageRoute<void>(builder: (BuildContext context) {
+        final Iterable<ListTile> tiles = _saved.map((WordPair pair) {
+          return new ListTile(
+            title: new Text(
+              pair.asPascalCase,
+              style: _biggerFonts,
+            ),
+          );
+        });
+        final List<Widget> divided =
+            ListTile.divideTiles(context: context, tiles: tiles).toList();
+        return new Scaffold(
+          appBar: new AppBar(
+            title: const Text('Saved Suggestion'),
+          ),
+          body: new ListView(
+            children: divided,
+          ),
+        );
+      }),
     );
   }
 }
